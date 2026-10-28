@@ -1,0 +1,43 @@
+=== PoC F-01: repay() runtime panic (mainnet market code) ===
+
+[1] victor calls market.repay(usdc, 1 USDC, none) with NO debt at all:
+    result: {"type":"err","value":{"type":"uint","value":"600006"}}
+
+[2] control: victor with a real debt (should repay cleanly):
+    collateral-add: ok
+    borrow: ok
+    result: ok {"type":"uint","value":"1000000000"}
+
+[3] victor repays AGAIN (debt now zero, same-asset double-repay):
+Error: Runtime error while interpreting ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.market-v8
+
+Error occured in market-v8:1311:34
+==================================
+Expression:
+( unwrap-panic ( get-cached-indexes asset-id ) )
+Error: UnwrapFailure
+ Stack Trace: 
+ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.market-v8:repay
+_native_:special_let
+_native_:special_get-tuple
+_native_:native_unwrap
+
+    RUNTIME PANIC -> 
+
+[4] fresh user with USDC debt tries to repay sBTC (wrong asset):
+    collateral-add: ok
+    borrow: ok
+Error: Runtime error while interpreting ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.market-v8
+
+Error occured in market-v8:1311:34
+==================================
+Expression:
+( unwrap-panic ( get-cached-indexes asset-id ) )
+Error: UnwrapFailure
+ Stack Trace: 
+ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.market-v8:repay
+_native_:special_let
+_native_:special_get-tuple
+_native_:native_unwrap
+
+    RUNTIME PANIC -> 

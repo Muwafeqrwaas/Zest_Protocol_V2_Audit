@@ -1,0 +1,46 @@
+adversarial egroup proposal: OK
+=== INIT DONE (market-v8 = ported mainnet v0-8-market) ===
+
+bob vault-stx deposit: ok
+=== SCENARIO 2: multi-debt bad-debt socialization ===
+  dave collateral-add 1 sBTC: ok {"type":"uint","value":"100000000"}
+  dave borrow 15000 USDC: ok {"type":"true"}
+  dave borrow 6000 STX: ok {"type":"true"}
+  vault-usdc BEFORE: assets=1000000001000 debt=15000000000 principal-scaled=15000000000 index=1000000000000 lindex=1000000000000
+  vault-stx BEFORE: assets=9000000001000 debt=6000000000 principal-scaled=6000000000 index=1000000000000 lindex=1000000000000
+  dave USDC scaled-debt: 15000000000
+  dave STX scaled-debt: 6000000000
+
+-- crash BTC to $3k, liquidate via USDC (charlie) --
+  liquidate dave full result: {"type":"ok","value":{"type":"tuple","value":{"collateral":{"type":"uint","value":"100000000"},"debt":{"type":"uint","value":"2727272727"}}}}
+  EV: {"contract_identifier":"ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.market-v8","raw_value":"0x0c0000000306616374696f6e0d000000136261642d646562742d736f6369616c697a65640663616c6c6572051aa5180cc1ff6050df53f0ab766d76b630e14feb0c04646174610c0000000208626f72726f776572051a05572d04565d56f67e84ad7e20deedd8e7bba2fd09646562742d6c6973740b000000020c00000002036169640100000000000000000000000000000000067363616c6564
+  EV: {"contract_identifier":"ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.market-v8","raw_value":"0x0c0000000306616374696f6e0d000000096c69717569646174650663616c6c6572051aa5180cc1ff6050df53f0ab766d76b630e14feb0c04646174610c0000000f136261642d646562742d736f6369616c697a65640308626f72726f776572051a05572d04565d56f67e84ad7e20deedd8e7bba2fd15636f6c6c61746572616c2d61737365742d61646472061a6d78de7b0625dfbfc16c3a8a57
+  charlie sBTC balance after: {"type":"uint","value":"200000000"} (expected ~1 BTC seized)
+  dave USDC scaled-debt after: 0
+  dave STX scaled-debt after: 0
+  vault-usdc AFTER: assets=987727273727 debt=0 principal-scaled=0 index=1000000000000 lindex=987727272739
+  vault-stx AFTER: assets=8994000001000 debt=0 principal-scaled=0 index=1000000000000 lindex=999333333333
+  vault-usdc: assets=987727273727 debt=0 total-borrowed=0 debt>=borrowed: true
+  vault-stx: assets=8994000001000 debt=0 total-borrowed=0 debt>=borrowed: true
+  vault-sbtc: assets=1000 debt=0 total-borrowed=0 debt>=borrowed: true
+
+-- post-socialization vault-stx functionality --
+  erin collateral-add: ok {"type":"uint","value":"100000000"}
+  erin borrow 100 STX: ok {"type":"true"}
+  erin repay 100 STX: ok {"type":"uint","value":"100000000"}
+
+=== SCENARIO 3: liquidate-multi-with-feeds batch semantics ===
+  frank borrow 500 USDC: ok
+  alice USDC debt before: 42000000000
+  batch FULL result: {
+ "type": "err",
+ "value": {
+  "type": "uint",
+  "value": "400018"
+ }
+}
+  batch events count: 0
+  batch bad-debt-socialized events: 0
+  alice USDC debt after batch: 42000000000
+  individual liquidate alice: ok {"type":"tuple","value":{"collateral":{"type":"uint","value":"100000000"},"debt":{"type":"
+  batch [frank(healthy)] alone: ERR {"type":"uint","value":"400018"}
